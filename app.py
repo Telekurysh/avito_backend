@@ -84,7 +84,8 @@ def get_user_banner(token):
     tag_id = request.args.get('tag_id')
     feature_id = request.args.get('feature_id')
     use_last_revision = request.args.get('use_last_revision', False)
-
+    tag_id = 1
+    feature_id = 1
     if not token:
         return jsonify({"error": "Missing token"}), 401
     user_role = check_token_and_role(token)
@@ -93,10 +94,10 @@ def get_user_banner(token):
 
     # Запрос к базе данных для получения баннера
     cur.execute("""
-        SELECT b.id, b.content
+        SELECT b.content
         FROM banners b
         JOIN banner_tags bt ON b.id = bt.banner_id
-        WHERE bt.tag_id IN (%s)
+        WHERE bt.tag_id = (%s)
         AND b.feature_id = %s
         AND b.is_active = TRUE
         ORDER BY b.updated_at DESC

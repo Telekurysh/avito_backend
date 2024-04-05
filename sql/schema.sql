@@ -31,12 +31,13 @@ CREATE TABLE banner_tags
     PRIMARY KEY (banner_id, tag_id)
 );
 
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
+CREATE TABLE users
+(
+    id       SERIAL PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(100) NOT NULL,
-    role VARCHAR(50) NOT NULL,
-    token VARCHAR(100) UNIQUE
+    password VARCHAR(100)        NOT NULL,
+    role     VARCHAR(50)         NOT NULL,
+    token    VARCHAR(100) UNIQUE
 );
 
 CREATE INDEX idx_banners_feature_id ON banners (feature_id);
@@ -46,3 +47,28 @@ CREATE INDEX idx_banner_tags_tag_id ON banner_tags (tag_id);
 CREATE INDEX idx_features_id ON features (id);
 
 CREATE INDEX idx_tags_id ON tags (id);
+
+insert into tags
+values
+(1, 'tag1'),
+(2, 'tag2');
+
+insert into banner_tags
+values
+(1, 1),
+(2, 2);
+
+
+select *
+from banner_tags;
+select * from banners;
+select * from tags;
+
+SELECT b.id, b.content
+        FROM banners b
+        JOIN banner_tags bt ON b.id = bt.banner_id
+        WHERE bt.tag_id = 1
+        AND b.feature_id = 1
+        AND b.is_active = TRUE
+        ORDER BY b.updated_at DESC
+        LIMIT 1;
