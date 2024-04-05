@@ -1,8 +1,13 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for
 import psycopg2
 from psycopg2 import sql
+from flask_caching import Cache
 
 app = Flask(__name__)
+
+cache = Cache()
+app.config['CACHE_TYPE'] = 'simple'
+cache.init_app(app)
 
 # Подключение к базе данных PostgreSQL
 conn = psycopg2.connect(
@@ -13,6 +18,7 @@ conn = psycopg2.connect(
 )
 cur = conn.cursor()
 
+
 def check_token_and_role(token):
     cur.execute("SELECT role FROM users WHERE token = %s", (token,))
     user_role = cur.fetchone()
@@ -21,9 +27,11 @@ def check_token_and_role(token):
     else:
         return None
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -45,6 +53,7 @@ def login():
             return render_template('login.html', error='Invalid username or password')
     return render_template('login.html')
 
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -56,15 +65,18 @@ def register():
         if cur.fetchone():
             return render_template('register.html', error='Username already exists')
         else:
-            cur.execute("INSERT INTO users (username, password, role, token) VALUES (%s, %s, %s, %s)", (username, password, role, token))
+            cur.execute("INSERT INTO users (username, password, role, token) VALUES (%s, %s, %s, %s)",
+                        (username, password, role, token))
             conn.commit()
             # Пользователь успешно зарегистрирован, можно перенаправить на страницу входа
             return redirect(url_for('login'))
     return render_template('register.html')
 
+
 @app.route('/home/<token>')
 def home(token):
     return render_template('home.html', token=token)
+
 
 # Метод получения баннера для пользователя
 @app.route('/user_banner/<token>', methods=['GET'])
@@ -81,13 +93,14 @@ def get_user_banner(token):
 
     # Запрос к базе данных для получения баннера
     cur.execute("""
-        SELECT b.content
+        SELECT b.id, b.content
         FROM banners b
         JOIN banner_tags bt ON b.id = bt.banner_id
-        WHERE bt.tag_id = %s AND b.feature_id = %s
+        WHERE bt.tag_id IN (%s)
+        AND b.feature_id = %s
         AND b.is_active = TRUE
         ORDER BY b.updated_at DESC
-        LIMIT 1
+        LIMIT 1;
     """, (tag_id, feature_id))
     banner = cur.fetchone()
 

@@ -38,3 +38,11 @@ CREATE TABLE users (
     role VARCHAR(50) NOT NULL,
     token VARCHAR(100) UNIQUE
 );
+
+CREATE INDEX idx_banners_feature_id ON banners (feature_id);
+
+CREATE INDEX idx_banner_tags_tag_id ON banner_tags (tag_id);
+
+CREATE INDEX idx_features_id ON features (id);
+
+CREATE INDEX idx_tags_id ON tags (id);
