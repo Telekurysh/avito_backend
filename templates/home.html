@@ -9,8 +9,8 @@
     <h1>Welcome to Home Page</h1>
     <p>This is the home page of our application.</p>
     <p>Your token: {{ token }}</p>
-    <a href="/user_banner/{{ token }}">Go to User Banner Page</a><br>
-    <a href="/banner/{{ token }}">Go to Banner Page</a><br>
+    <a href="/user_banner?token={{ token }}">Go to User Banner Page</a><br>
+    <a href="/banner?token={{ token }}">Go to Banner Page</a><br>
 
 </body>
 </html>

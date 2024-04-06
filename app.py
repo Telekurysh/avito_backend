@@ -2,8 +2,10 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for
 import psycopg2
 from psycopg2 import sql
 from flask_caching import Cache
+from api import api
 
 app = Flask(__name__)
+api.init_app(app)
 
 cache = Cache()
 app.config['CACHE_TYPE'] = 'simple'
@@ -28,7 +30,7 @@ def check_token_and_role(token):
         return None
 
 
-@app.route('/')
+@app.route('/index')
 def index():
     return render_template('index.html')
 
@@ -73,14 +75,16 @@ def register():
     return render_template('register.html')
 
 
-@app.route('/home/<token>')
-def home(token):
+@app.route('/home')
+def home():
+    token = request.args.get('token')
     return render_template('home.html', token=token)
 
 
 # Метод получения баннера для пользователя
-@app.route('/user_banner/<token>', methods=['GET'])
-def get_user_banner(token):
+@app.route('/user_banner', methods=['GET'])
+def get_user_banner():
+    token = request.args.get('token')
     tag_id = request.args.get('tag_id')
     feature_id = request.args.get('feature_id')
     use_last_revision = request.args.get('use_last_revision', False)
@@ -104,7 +108,7 @@ def get_user_banner(token):
         LIMIT 1;
     """, (tag_id, feature_id))
     banner = cur.fetchone()
-
+    print(banner)
     if banner:
         return jsonify(banner[0])
     else:
@@ -112,8 +116,9 @@ def get_user_banner(token):
 
 
 # Метод получения всех баннеров с фильтрацией
-@app.route('/banner/<token>', methods=['GET'])
-def get_banners(token):
+@app.route('/banner', methods=['GET'])
+def get_banners():
+    token = request.args.get('token')
     feature_id = request.args.get('feature_id')
     tag_id = request.args.get('tag_id')
     limit = request.args.get('limit', 10)
@@ -163,8 +168,9 @@ def get_banners(token):
 
 
 # Метод создания нового баннера
-@app.route('/banner/<token>', methods=['POST'])
-def create_banner(token):
+@app.route('/banner/', methods=['POST'])
+def create_banner():
+    token = request.args.get('token')
     data = request.get_json()
 
     user_role = check_token_and_role(token)
@@ -194,8 +200,9 @@ def create_banner(token):
 
 
 # Метод обновления баннера
-@app.route('/banner/<token>/<int:id>', methods=['PATCH'])
-def update_banner(token, id):
+@app.route('/banner/<int:id>', methods=['PATCH'])
+def update_banner(id):
+    token = request.args.get('token')
     data = request.get_json()
 
     user_role = check_token_and_role(token)
@@ -228,8 +235,9 @@ def update_banner(token, id):
 
 
 # Метод удаления баннера
-@app.route('/banner/<token>/<int:id>', methods=['DELETE'])
-def delete_banner(token, id):
+@app.route('/banner/<int:id>', methods=['DELETE'])
+def delete_banner(id):
+    token = request.args.get('token')
     user_role = check_token_and_role(token)
     if user_role is None:
         return jsonify({"error": "Invalid token"}), 401
