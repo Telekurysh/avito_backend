@@ -83,8 +83,11 @@ def home():
 
 # Метод получения баннера для пользователя
 @app.route('/user_banner', methods=['GET'])
-def get_user_banner():
-    token = request.args.get('token')
+def get_user_banner(*args):
+    if args[0]:
+        token = args[0]
+    else:
+        token = request.args.get('token')
     tag_id = request.args.get('tag_id')
     feature_id = request.args.get('feature_id')
     use_last_revision = request.args.get('use_last_revision', False)
@@ -117,8 +120,11 @@ def get_user_banner():
 
 # Метод получения всех баннеров с фильтрацией
 @app.route('/banner', methods=['GET'])
-def get_banners():
-    token = request.args.get('token')
+def get_banners(*args):
+    if args[0]:
+        token = args[0]
+    else:
+        token = request.args.get('token')
     feature_id = request.args.get('feature_id')
     tag_id = request.args.get('tag_id')
     limit = request.args.get('limit', 10)
@@ -167,10 +173,64 @@ def get_banners():
     return jsonify(result)
 
 
+@app.route('/banner', methods=['GET'])
+def get_banners_with_filter(id, *args):
+    if args[0]:
+        token = args[0]
+    else:
+        token = request.args.get('token')
+    feature_id = request.args.get('feature_id')
+    tag_id = request.args.get('tag_id')
+
+    # Проверка авторизации
+    user_role = check_token_and_role(token)
+    if user_role is None:
+        return jsonify({"error": "Invalid token"}), 401
+
+    # Запрос к базе данных для получения всех баннеров с фильтрацией
+    query = """
+        SELECT b.id as banner_id, array_agg(bt.tag_id) as tag_ids, b.feature_id, 
+               b.content, b.is_active, b.created_at, b.updated_at
+        FROM banners b
+        JOIN banner_tags bt ON b.id = bt.banner_id
+        WHERE 1=1
+    """
+    params = []
+
+    if feature_id:
+        query += " AND b.feature_id = %s"
+        params.append(feature_id)
+    if tag_id:
+        query += " AND bt.tag_id = %s"
+        params.append(tag_id)
+
+    query += " GROUP BY b.id"
+
+    cur.execute(query, params)
+    banners = cur.fetchall()
+
+    result = []
+    for banner in banners:
+        result.append({
+            "banner_id": banner[0],
+            "tag_ids": banner[1],
+            "feature_id": banner[2],
+            "content": banner[3],
+            "is_active": banner[4],
+            "created_at": banner[5],
+            "updated_at": banner[6]
+        })
+
+    return jsonify(result)
+
+
 # Метод создания нового баннера
 @app.route('/banner/', methods=['POST'])
-def create_banner():
-    token = request.args.get('token')
+def create_banner(*args):
+    if args[0]:
+        token = args[0]
+    else:
+        token = request.args.get('token')
     data = request.get_json()
 
     user_role = check_token_and_role(token)
@@ -201,8 +261,11 @@ def create_banner():
 
 # Метод обновления баннера
 @app.route('/banner/<int:id>', methods=['PATCH'])
-def update_banner(id):
-    token = request.args.get('token')
+def update_banner(id, *args):
+    if args[0]:
+        token = args[0]
+    else:
+        token = request.args.get('token')
     data = request.get_json()
 
     user_role = check_token_and_role(token)
@@ -236,8 +299,11 @@ def update_banner(id):
 
 # Метод удаления баннера
 @app.route('/banner/<int:id>', methods=['DELETE'])
-def delete_banner(id):
-    token = request.args.get('token')
+def delete_banner(id, *args):
+    if args[0]:
+        token = args[0]
+    else:
+        token = request.args.get('token')
     user_role = check_token_and_role(token)
     if user_role is None:
         return jsonify({"error": "Invalid token"}), 401

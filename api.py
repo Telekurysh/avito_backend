@@ -9,28 +9,28 @@ api.spec_path = 'api.yaml'
 @api.route('/user_banner')
 class UserBanner(Resource):
     def get(self):
-        return app.get_user_banner()
+        return app.get_user_banner('user')
 
 
 @api.route('/banner')
 class Banner(Resource):
     def get(self):
-        return app.get_banners()
+        return app.get_banners('admin')
 
     def post(self):
-        return app.create_banner()
+        return app.create_banner('admin')
 
 
 @api.route('/banner/<int:id>')
 class BannerById(Resource):
     def get(self, id):
-        return {'message': f'GET banner by id {id}'}
+        return app.get_banners_with_filter(id, 'admin')
 
     def patch(self, id):
-        return app.update_banner(id)
+        return app.update_banner(id, 'admin')
 
     def delete(self, id):
-        return app.delete_banner(id)
+        return app.delete_banner(id, 'admin')
 
 
 if __name__ == '__main__':
